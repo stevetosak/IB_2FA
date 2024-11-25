@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Check your mail</title>
+</head>
+<body>
+Go to your email and click on the link that was sent.
+Didn't get an email? Click <a th:href="@{/mail-verify/resend-vlink(uid=${uid})}">here</a>
+</body>
+</html>

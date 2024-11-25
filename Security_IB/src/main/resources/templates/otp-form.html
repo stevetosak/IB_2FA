@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Form</title>
+    <link rel="stylesheet" href="/otp.css">
+</head>
+<body>
+<div class="otp-container">
+    <h2>Enter OTP</h2>
+    <p>Enter the 6-digit code sent to your email:</p>
+    <form id="otp-form" th:action="@{/verify-otp(uid=${uid})}" method="post">
+        <div class="otp-inputs">
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" autofocus required>
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" required>
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" required>
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" required>
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" required>
+            <input type="text" maxlength="1" name="otp[]" class="otp-input" required>
+        </div>
+        <button type="submit">Submit</button>
+        <div id ="error" th:text="${error}"></div>
+    </form>
+    <p>
+        Didn't get an email?
+        <br>
+        Click <a th:href="@{/mail-verify/resend-otp(uid=${uid})}">here</a>
+    </p>
+</div>
+<script src="/otpscript.js"></script>
+</body>
+</html>
