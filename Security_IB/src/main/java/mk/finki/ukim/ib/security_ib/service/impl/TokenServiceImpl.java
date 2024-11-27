@@ -34,19 +34,22 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    @Transactional
     public void verify(String tokenValue) {
         Optional<AuthToken> tokenOptional = tokenRepository.findByTokenValue(tokenValue);
         LocalDateTime now = LocalDateTime.now();
 
-        if(tokenOptional.isEmpty()) {
+        if (tokenOptional.isEmpty()) {
             throw new TokenNotFoundException("Token " + tokenValue + " not found");
         }
 
-        if(now.isAfter(tokenOptional.get().getExpiresAt())){
-            throw new TokenExpiredException("Token expired");
-        };
+        AuthToken token = tokenOptional.get();
 
-        AuthToken token =  tokenOptional.get();
+        if (now.isAfter(token.getExpiresAt())) {
+            throw new TokenExpiredException("Token expired");
+        }
+        ;
+
         User user = token.getUser();
 
         token.setUsed(true);
@@ -68,10 +71,9 @@ public class TokenServiceImpl implements TokenService {
         return String.format("%06d", code);
     }
 
-    @Override
-    @Transactional
+    @Override @Transactional
     public void verifyOTP(String[] otp) {
-        if(otp.length != 6){
+        if (otp.length != 6) {
             throw new InvalidOTPLength("Please fill out all fields");
         }
 
@@ -79,13 +81,13 @@ public class TokenServiceImpl implements TokenService {
         System.out.println("concat " + otpConcat);
 
         Optional<AuthToken> authTokenOptional = tokenRepository.findByTokenValue(otpConcat);
-        if(authTokenOptional.isEmpty()){
+        if (authTokenOptional.isEmpty()) {
             throw new TokenNotFoundException("Token does not match");
         }
 
         AuthToken authToken = authTokenOptional.get();
 
-        if(authToken.getExpiresAt().isBefore(LocalDateTime.now())){
+        if (authToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new TokenExpiredException("Token expired");
         }
 
@@ -101,10 +103,10 @@ public class TokenServiceImpl implements TokenService {
         token.setUser(user);
         token.setExpiresAt(expiresAt);
 
-        if(type.equals("otp")){
+        if (type.equals("otp")) {
             token.setType("otp");
             token.setTokenValue(generate2FACode());
-        } else if(type.equals("link")){
+        } else if (type.equals("link")) {
             token.setType("link");
             token.setTokenValue(generateMailCode());
         } else {

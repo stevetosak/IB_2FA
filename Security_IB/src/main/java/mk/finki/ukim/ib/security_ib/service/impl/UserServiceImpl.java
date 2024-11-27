@@ -6,11 +6,15 @@ import mk.finki.ukim.ib.security_ib.entities.User;
 import mk.finki.ukim.ib.security_ib.exceptions.*;
 import mk.finki.ukim.ib.security_ib.repository.UserRepository;
 import mk.finki.ukim.ib.security_ib.service.EmailService;
+import mk.finki.ukim.ib.security_ib.service.PsEncode;
 import mk.finki.ukim.ib.security_ib.service.TokenService;
 import mk.finki.ukim.ib.security_ib.service.UserService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -29,16 +33,10 @@ public class UserServiceImpl implements UserService {
         this.tokenService = tokenService;
     }
 
-    private String getSalt(){
-        SecureRandom sr = new SecureRandom();
-        byte[] salt = new byte[16];
-        sr.nextBytes(salt);
-        return new String(Base64.getEncoder().encode(salt));
-    }
 
     @Transactional
     @Override
-    public User register(String username, String email, String password) {
+    public User register(String username, String email, String password) throws NoSuchAlgorithmException {
         userRepository.findUserByUsername(username).ifPresent(user -> {
             throw new UsernameExistsException("Username " + username + " already exists");
         });
@@ -46,18 +44,13 @@ public class UserServiceImpl implements UserService {
             throw new EmailExistsException("Email " + email + " already exists");
         });
 
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
-
-        String salt = getSalt();
-        String passwordHash = encoder.encode(password.concat(salt));
-        System.out.println("SALT " + salt);
-
-        String saltedPasswordHash = String.format("%s:%s", passwordHash, salt);
+        PsEncode passwordEncoder = new PsEncode(15);
+        String passwordHash = passwordEncoder.encode(password,16);
 
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(saltedPasswordHash);
+        user.setPassword(passwordHash);
 
         userRepository.save(user);
 
@@ -77,19 +70,9 @@ public class UserServiceImpl implements UserService {
         return user.get();
     }
 
-    private boolean validate(User user, String password) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
-
-        String[] passwordSplit = user.getPassword().split(":");
-        String hashedPassword = passwordSplit[0];
-        String salt = passwordSplit[passwordSplit.length-1];
-
-        return encoder.matches(password.concat(salt), hashedPassword);
-
-    }
 
     @Override
-    public User login(String usernameOrEmail, String password) {
+    public User login(String usernameOrEmail, String password) throws NoSuchAlgorithmException {
         User usr;
 
         Optional<User> usrByUsername = userRepository.findUserByUsername(usernameOrEmail);
@@ -102,8 +85,10 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UserNotFoundException("Invalid credentials");
         }
+        
+        PsEncode passwordEncoder = new PsEncode(15);
 
-        if(!validate(usr, password)){
+        if(!passwordEncoder.matches(password,usr.getPassword())){
             throw new IncorrectPasswordException("Incorrect password");
         }
 

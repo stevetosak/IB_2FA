@@ -33,6 +33,7 @@ public class LoginController {
             return "redirect:/login/otp" + params;
         } catch (Exception e){
             System.out.println(e.getMessage());
+            e.printStackTrace();
             model.addAttribute("error", e.getMessage());
             return "login";
         }

@@ -29,10 +29,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendVerificationEmailRegister(User user) {
 
         AuthToken authToken = tokenService.createAuthToken(user,"link", LocalDateTime.now().plusMinutes(5));
-
         String link = verifyURL + "?token=" + authToken.getTokenValue();
-
-        System.out.println("MAIL " + user.getEmail());
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());
